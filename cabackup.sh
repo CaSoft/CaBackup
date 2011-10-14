@@ -8,6 +8,11 @@
 # Autor: CaSoft Tecnologia - Evaldo Junior <junior@casoft.info>
 #
 # Versão 1.0 - 06 de Out. de 2011
+# Versão 1.1 - 14 de Out. de 2011
+#   - Backup do MySQL agora é opcional
+#   - Montagem de HD externa é opcional
+#   - Agora ele gera o log em um arquivo, opcional
+#   - Agora exibe o primeiro nível da estrutura dos diretórios sendo copiados
 #
 # Licença: GNU GPL v3 (http://www.gnu.org/licenses/gpl-3.0.txt)
 #
@@ -39,16 +44,16 @@ ORIGENS=( "/opt" "/var/www" )
 #
 # Disco externo - Deixe em branco caso não use um disco externo
 #
-DISCO_EXTERNO=""
+DISCO_EXTERNO="/dev/sdb1"
 #
 # Ponto de montagem - Deixe em branco caso não use um disco externo
 #
-PONTO_MONTAGEM=""
+PONTO_MONTAGEM="/mnt/backup"
 #
 # Onde o backup será gravado?
 # Sempre DEIXE uma barra no nome do diretório
 #
-DESTINO="/tmp/meu_backup/"
+DESTINO="/mnt/backup/backup"
 #
 # Arquivo para gravar o log. Deixa em branco para não ter log.
 #
