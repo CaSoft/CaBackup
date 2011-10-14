@@ -16,7 +16,12 @@
 # Faça as adaptações do script aqui    #
 ########################################
 #
+# Opção de saída na tela, use 0 para não ter saída na tela
+#
+SAIDA_NA_TELA=1
+#
 # Dados do MySQL
+# Deixe o HOST em branco para não copiar o MySQL
 #
 MYSQL_HOST="localhost"
 MYSQL_USER="root"
@@ -27,15 +32,27 @@ MYSQL_PASS="root"
 # Separe os diretórios com espaços
 # isso é um array do bash, siga o padrão
 #
-ORIGENS=( "/opt/" "/var/www/" )
+# !!! ATENÇÃO !!!
+# Não deixe uma barra ao final do caminho!
 #
-# Disco externo
+ORIGENS=( "/opt" "/var/www" )
 #
-DISCO_EXTERNO="/dev/sdb1"
+# Disco externo - Deixe em branco caso não use um disco externo
+#
+DISCO_EXTERNO=""
+#
+# Ponto de montagem - Deixe em branco caso não use um disco externo
+#
+PONTO_MONTAGEM=""
 #
 # Onde o backup será gravado?
+# Sempre DEIXE uma barra no nome do diretório
 #
-DESTINO="/mnt/backup/"
+DESTINO="/tmp/meu_backup/"
+#
+# Arquivo para gravar o log. Deixa em branco para não ter log.
+#
+ARQUIVO_LOG="/tmp/meulog.txt"
 #
 ########################################
 # Fim do Config                        #
@@ -43,36 +60,76 @@ DESTINO="/mnt/backup/"
 # o que está fazendo                   #
 ########################################
 #
-# Montando o externo
+# Esta função exibe a mensagem na tela e grava o log
 #
-mount "$DISCO_EXTERNO" "$DESTINO"
+function log_mensagem {
+    if [ ! $SAIDA_NA_TELA -eq 0 ]
+    then
+        echo $1
+    fi
+    if [ -n "$ARQUIVO_LOG" ]
+    then
+        echo $1 >> "$ARQUIVO_LOG"
+    fi
+}
+#
+# Data do backup
+#
+DATA=`date +%Y%m%d`
+#
+# Agora começa
+#
+log_mensagem "Iniciando o backup de $DATA"
+#
+# Foi definido um disco externo? Então monta
+#
+if [ -n "$DISCO_EXTERNO" ]
+then
+    log_mensagem "Montando disco externo"
+    mount "$DISCO_EXTERNO" "$PONTO_MONTAGEM"
+fi
 #
 # Auxiliares
 #
 BIN_MYSQLDUMP=`which mysqldump`
-DATA=`date +%Y%m%d`
+#
+# O diretório de destino existe? Não? Então crie-o, ué.
 if [ ! -d "$DESTINO$DATA" ]
 then
-    mkdir "$DESTINO$DATA"
+    mkdir -p "$DESTINO$DATA"
 fi
 #
 # Começando o backup!
 #
 for origem in "${ORIGENS[@]}"
 do
-    echo "Copiando $origem..."
-    cp -r "$origem" "$DESTINO$DATA"
-    echo "$origem copiado"
+    NOME_DIR=${origem##*/}
+    DEST="$DESTINO$DATA/$NOME_DIR"
+    for sub in $(ls "$origem")
+    do
+        log_mensagem "Copiando $origem/$sub..."
+        cp -r "$origem/$sub" "$DEST"
+        log_mensagem "$origem/$sub copiado"
+    done
 done
 
 #
 # Agora vamos ao MySQL
 #
-echo "Iniciando o backup do MySQL"
-$BIN_MYSQLDUMP -u "$MYSQL_USER" -h "$MYSQL_HOST" --password="$MYSQL_PASS" --all-databases > "$DESTINO$DATA/backup_mysql.sql"
-echo "Backup do MySQL completo"
+if [ -n $MYSQL_HOST ]
+then
+    log_mensagem "Iniciando o backup do MySQL"
+    $BIN_MYSQLDUMP -u "$MYSQL_USER" -h "$MYSQL_HOST" --password="$MYSQL_PASS" --all-databases > "$DESTINO$DATA/backup_mysql.sql"
+    log_mensagem "Backup do MySQL completo"
+fi
 
-echo "Desmontando o externo"
-umount "$DESTINO"
+#
+# Tem que desmontar?
+#
+if [ -n "$DISCO_EXTERNO" ]
+then
+    log_mensagem "Desmontando o externo"
+    umount "$DESTINO"
+fi
 
-echo "Fim do script de backup"
+log_mensagem "Fim do script de backup"
