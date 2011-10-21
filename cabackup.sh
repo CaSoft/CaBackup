@@ -53,7 +53,7 @@ PONTO_MONTAGEM="/mnt/backup"
 # Onde o backup será gravado?
 # Sempre DEIXE uma barra no nome do diretório
 #
-DESTINO="/mnt/backup/backup"
+DESTINO="/mnt/backup/backup/"
 #
 # Arquivo para gravar o log. Deixa em branco para não ter log.
 #
